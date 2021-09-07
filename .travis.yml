@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t riomigal/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true USERNAME/react-test npm test
+
+after_success:
+  - docker build -t riomigal/multi-client ./client
+  - docker build -t riomigal/multi-nginx ./nginx
+  - docker build -t riomigal/multi-server ./server
+  - docker build -t riomigal/multi-worker ./worker
+
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push the to docker hub
+  - docker push riomigal/multi-client
+  - docker push riomigal/multi-nginx
+  - docker push riomigal/multi-server
+  - docker push riomigal/multi-worker
+
